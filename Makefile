@@ -3,7 +3,7 @@ BUNDLE := dev.nguyenhuy158.hcios
 DERIVED := build
 APP := $(DERIVED)/Build/Products/Debug-iphonesimulator/HcIOS.app
 
-.PHONY: project build sim shot shots clean
+.PHONY: project build test sim shot shots clean
 
 project:
 	xcodegen generate
@@ -11,6 +11,10 @@ project:
 build: project
 	xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -configuration Debug \
 		-destination 'platform=iOS Simulator,name=$(SIM)' -derivedDataPath $(DERIVED) build
+
+test: project
+	xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -configuration Debug \
+		-destination 'platform=iOS Simulator,name=$(SIM)' -derivedDataPath $(DERIVED) test
 
 sim: build
 	xcrun simctl boot '$(SIM)' 2>/dev/null || true

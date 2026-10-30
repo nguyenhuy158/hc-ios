@@ -40,17 +40,14 @@ struct TerminalListView: View {
                                    description: Text("Start an agent on your Mac with hc run claude, then pull to refresh."))
         default:
             List {
-                ForEach(TerminalStatus.allCases, id: \.self) { status in
-                    let items = model.terminals.filter { $0.status == status }.sorted { $0.since < $1.since }
-                    if !items.isEmpty {
-                        Section {
-                            ForEach(items) { t in
-                                NavigationLink(value: t) { TerminalRow(terminal: t) }
-                            }
-                        } header: {
-                            Label("\(status.title) · \(items.count)", systemImage: status.symbol)
-                                .foregroundStyle(status.tint)
+                ForEach(TerminalInfo.sections(model.terminals), id: \.status) { section in
+                    Section {
+                        ForEach(section.items) { t in
+                            NavigationLink(value: t) { TerminalRow(terminal: t) }
                         }
+                    } header: {
+                        Label("\(section.status.title) · \(section.items.count)", systemImage: section.status.symbol)
+                            .foregroundStyle(section.status.tint)
                     }
                 }
             }
@@ -79,7 +76,7 @@ struct TerminalRow: View {
                         .foregroundStyle(terminal.status == .blocked ? Color.orange : .secondary)
                         .fixedSize()
                 }
-                Text("\(terminal.program) · \(shortFolder)")
+                Text("\(terminal.program) · \(terminal.shortFolder)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -87,14 +84,6 @@ struct TerminalRow: View {
             }
         }
         .padding(.vertical, 2)
-    }
-
-    private var shortFolder: String {
-        let pieces = terminal.folder.split(separator: ":", maxSplits: 1).map(String.init)
-        let machine = pieces.count == 2 ? pieces[0] + " · " : ""
-        let path = pieces.last ?? terminal.folder
-        let parts = path.split(separator: "/")
-        return machine + (parts.count > 2 ? parts.suffix(2).joined(separator: "/") : path)
     }
 
     private var statusTime: String {

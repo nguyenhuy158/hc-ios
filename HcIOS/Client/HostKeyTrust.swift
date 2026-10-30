@@ -36,21 +36,22 @@ struct HostKeyTrust {
         return "SHA256:" + digest.trimmingCharacters(in: CharacterSet(charactersIn: "="))
     }
 
+    static func check(host: String, keyLine: String) throws {
+        let saved = trusted(host)
+        guard saved != keyLine else { return }
+        throw HostKeyError(host: host, keyLine: keyLine, fingerprint: fingerprint(keyLine),
+                           previousFingerprint: saved.map(fingerprint))
+    }
+
     struct Validator: NIOSSHClientServerAuthenticationDelegate {
         let host: String
 
         func validateHostKey(hostKey: NIOSSHPublicKey, validationCompletePromise: EventLoopPromise<Void>) {
-            let line = String(openSSHPublicKey: hostKey)
-            let saved = HostKeyTrust.trusted(host)
-            if saved == line {
+            do {
+                try HostKeyTrust.check(host: host, keyLine: String(openSSHPublicKey: hostKey))
                 validationCompletePromise.succeed(())
-            } else {
-                validationCompletePromise.fail(HostKeyError(
-                    host: host,
-                    keyLine: line,
-                    fingerprint: HostKeyTrust.fingerprint(line),
-                    previousFingerprint: saved.map(HostKeyTrust.fingerprint)
-                ))
+            } catch {
+                validationCompletePromise.fail(error)
             }
         }
     }

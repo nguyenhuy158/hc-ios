@@ -107,7 +107,7 @@ final class SSHHcClient: HcClient {
         Task {
             do {
                 try await client.withExec(command) { inbound, outbound in
-                    await link.attach(outbound)
+                    await link.attach { data in try await outbound.write(ByteBuffer(bytes: Array(data))) }
                     for try await output in inbound {
                         if case .stdout(let buffer) = output {
                             await link.feed(Data(buffer.readableBytesView))

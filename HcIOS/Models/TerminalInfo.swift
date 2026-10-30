@@ -41,6 +41,23 @@ struct TerminalInfo: Identifiable, Hashable {
     var screen: String
 }
 
+extension TerminalInfo {
+    static func sections(_ terminals: [TerminalInfo]) -> [(status: TerminalStatus, items: [TerminalInfo])] {
+        TerminalStatus.allCases.compactMap { status in
+            let items = terminals.filter { $0.status == status }.sorted { $0.since < $1.since }
+            return items.isEmpty ? nil : (status, items)
+        }
+    }
+
+    var shortFolder: String {
+        let pieces = folder.split(separator: ":", maxSplits: 1).map(String.init)
+        let machine = pieces.count == 2 ? pieces[0] + " · " : ""
+        let path = pieces.last ?? folder
+        let parts = path.split(separator: "/")
+        return machine + (parts.count > 2 ? parts.suffix(2).joined(separator: "/") : path)
+    }
+}
+
 extension Date {
     func elapsedShort(now: Date = .now) -> String {
         let f = DateComponentsFormatter()

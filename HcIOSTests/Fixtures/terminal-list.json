@@ -1,0 +1,22 @@
+{
+  "hidden_finished": 0,
+  "machines": [
+    {"host": "vps", "id": "m1", "name": "vps", "session": null, "state": "connected", "target": "vps", "temporary": false, "version": "0.1.14", "via": false}
+  ],
+  "terminals": [
+    {"address": "t1", "argv": ["/bin/zsh"], "cols": 121, "created_ms": 1793352922806, "cwd": "/Users/me", "die_with_parent": false, "exit_code": null, "finished_ms": null,
+     "foreground": {"argv": ["claude"], "cwd": "/Users/me/work/api/services/farm", "name": "claude", "pid": 46043},
+     "identity": "ghostty", "keep": true, "labels": {"herdr.space": "sp1", "herdr.tab": "tb1", "where": "api / 1"},
+     "name": null, "notify": true, "parent": null, "pid": 46043, "reason": null, "reported": true, "rm": false, "rows": 31, "screen": "exact", "signal": null,
+     "state": "live", "status": {"app": "claude-code", "kind": "permission", "state": "blocked"}, "status_ms": 1793371649741, "template": null, "title": "✳ Claude Code", "turn": 3},
+    {"address": "vps/t1", "argv": ["/bin/bash"], "cols": 114, "created_ms": 1793356235453, "cwd": "/root", "die_with_parent": false, "exit_code": null, "finished_ms": null,
+     "foreground": {"argv": ["/bin/bash"], "cwd": "/root", "name": "bash", "pid": 1851757},
+     "identity": "ghostty", "keep": true, "labels": {"where": "root / 1"},
+     "name": null, "notify": true, "parent": null, "pid": 1851757, "reason": null, "reported": false, "rm": false, "rows": 31, "screen": "exact", "signal": null,
+     "state": "live", "status": null, "status_ms": null, "template": null, "title": "", "turn": 0},
+    {"address": "t9", "argv": ["/usr/local/bin/codex"], "cols": 100, "created_ms": 1793350000000, "cwd": "/Users/me/work/web", "die_with_parent": false, "exit_code": null, "finished_ms": null,
+     "foreground": null, "identity": "", "keep": false, "labels": {},
+     "name": "web-agent", "notify": true, "parent": null, "pid": 1, "reason": null, "reported": true, "rm": false, "rows": 30, "screen": "exact", "signal": null,
+     "state": "live", "status": {"app": "codex", "state": "error"}, "status_ms": 1793360000000, "template": null, "title": "codex", "turn": 1}
+  ]
+}

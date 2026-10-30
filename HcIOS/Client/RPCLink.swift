@@ -1,9 +1,7 @@
-import Citadel
 import Foundation
-import NIOCore
 
 actor RPCLink {
-    private var writer: TTYStdinWriter?
+    private var writer: (@Sendable (Data) async throws -> Void)?
     private var waiting: [CheckedContinuation<Void, Error>] = []
     private var pending: [Int: CheckedContinuation<Any, Error>] = [:]
     private var nextID = 1
@@ -15,7 +13,7 @@ actor RPCLink {
         self.onNotification = onNotification
     }
 
-    func attach(_ writer: TTYStdinWriter) {
+    func attach(_ writer: @escaping @Sendable (Data) async throws -> Void) {
         self.writer = writer
         waiting.forEach { $0.resume() }
         waiting = []
@@ -39,7 +37,7 @@ actor RPCLink {
             pending[id] = continuation
             Task {
                 do {
-                    try await writer.write(ByteBuffer(bytes: Array(line)))
+                    try await writer(line)
                 } catch {
                     self.resolve(id, .failure(error))
                 }
