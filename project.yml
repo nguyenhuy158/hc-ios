@@ -18,6 +18,14 @@ targets:
       - HcIOS
     dependencies:
       - package: Citadel
+    info:
+      path: HcIOS/Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleURLTypes:
+          - CFBundleURLName: dev.nguyenhuy158.hcios
+            CFBundleURLSchemes: [hcios]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.nguyenhuy158.hcios

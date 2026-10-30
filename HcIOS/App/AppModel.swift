@@ -31,6 +31,7 @@ final class AppModel {
     var user: String { didSet { save() } }
     var hcPath: String { didSet { save() } }
 
+    @ObservationIgnored private var pendingOpen: String?
     @ObservationIgnored private var eventsTask: Task<Void, Never>?
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
 
@@ -127,6 +128,20 @@ final class AppModel {
         HostKeyTrust.forget(config.hostKeyID)
     }
 
+    func open(_ url: URL) {
+        guard url.scheme == "hcios", url.host == "terminal" else { return }
+        let id = String(url.path.dropFirst())
+        guard !id.isEmpty else { return }
+        pendingOpen = id
+        openPending()
+    }
+
+    private func openPending() {
+        guard let id = pendingOpen, let terminal = terminals.first(where: { $0.id == id }) else { return }
+        pendingOpen = nil
+        path = [terminal]
+    }
+
     func refresh() async {
         if !isMock, connection != .connected {
             await connect()
@@ -135,6 +150,7 @@ final class AppModel {
         do {
             terminals = try await client.list()
             connection = .connected
+            openPending()
         } catch {
             connection = .disconnected(error.localizedDescription)
         }

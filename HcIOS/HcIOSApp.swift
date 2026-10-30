@@ -17,6 +17,7 @@ struct HcIOSApp: App {
                     }
                 }
                 .task { await model.start() }
+                .onOpenURL { model.open($0) }
                 .onChange(of: scenePhase) { _, phase in
                     switch phase {
                     case .active: Task { await model.reconnectIfNeeded() }
