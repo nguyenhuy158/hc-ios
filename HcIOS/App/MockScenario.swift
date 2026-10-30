@@ -7,8 +7,8 @@ enum MockScenario: String, CaseIterable {
     case hostKey, hostKeyChanged
     case lock
 
-    static var current: MockScenario {
-        UserDefaults.standard.string(forKey: "mock").flatMap(MockScenario.init(rawValue:)) ?? .list
+    static var current: MockScenario? {
+        UserDefaults.standard.string(forKey: "mock").flatMap(MockScenario.init(rawValue:))
     }
 
     func makeModel() -> AppModel {

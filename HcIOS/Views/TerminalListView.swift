@@ -14,6 +14,7 @@ struct TerminalListView: View {
                 }
             }
             .refreshable { await model.refresh() }
+            .badge(model.blockedCount)
     }
 
     @ViewBuilder
@@ -25,7 +26,7 @@ struct TerminalListView: View {
             } description: {
                 Text(reason)
             } actions: {
-                Button("Try again") { Task { await model.refresh() } }
+                Button("Try again") { Task { await model.connect() } }
                     .buttonStyle(.borderedProminent)
                 Button("Settings") { model.showSettings = true }
             }
@@ -89,8 +90,11 @@ struct TerminalRow: View {
     }
 
     private var shortFolder: String {
-        let parts = terminal.folder.split(separator: "/")
-        return parts.count > 2 ? parts.suffix(2).joined(separator: "/") : terminal.folder
+        let pieces = terminal.folder.split(separator: ":", maxSplits: 1).map(String.init)
+        let machine = pieces.count == 2 ? pieces[0] + " · " : ""
+        let path = pieces.last ?? terminal.folder
+        let parts = path.split(separator: "/")
+        return machine + (parts.count > 2 ? parts.suffix(2).joined(separator: "/") : path)
     }
 
     private var statusTime: String {

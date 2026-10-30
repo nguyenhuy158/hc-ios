@@ -86,15 +86,23 @@ struct SettingsView: View {
                 }
 
                 Section("Security") {
-                    LabeledContent("Host key", value: "SHA256:q3Vx8k…2tXE")
+                    LabeledContent("Host key", value: model.trustedFingerprint ?? "Not trusted yet")
                         .font(.subheadline)
-                    Button("Forget host key", role: .destructive) {}
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Button("Forget host key", role: .destructive) { model.forgetHostKey() }
+                        .disabled(model.trustedFingerprint == nil)
                 }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                        if !model.isMock { Task { await model.connect() } }
+                    }
+                }
             }
             .task {
                 if MockScenario.current == .settingsFailed { await runTest() }
@@ -106,7 +114,7 @@ struct SettingsView: View {
         testing = true
         defer { testing = false }
         do {
-            testResult = .success(try await model.client.test())
+            testResult = .success(try await model.test())
         } catch {
             testResult = .failure(error)
         }

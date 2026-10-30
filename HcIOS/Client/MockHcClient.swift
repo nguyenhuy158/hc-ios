@@ -1,8 +1,19 @@
 import Foundation
 
-struct MockHcClient: HcClient {
-    var terminals: [TerminalInfo] = MockData.terminals
+final class MockHcClient: HcClient {
+    var terminals: [TerminalInfo]
     var testError: HcError?
+
+    init(terminals: [TerminalInfo] = MockData.terminals, testError: HcError? = nil) {
+        self.terminals = terminals
+        self.testError = testError
+    }
+
+    func connect() async throws {}
+
+    func disconnect() async {}
+
+    func events() -> AsyncStream<Void> { AsyncStream { _ in } }
 
     func list() async throws -> [TerminalInfo] { terminals }
 

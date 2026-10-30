@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HostKeyView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(AppModel.self) private var model
     let prompt: HostKeyPrompt
 
     private var changed: Bool { prompt.previous != nil }
@@ -26,7 +27,7 @@ struct HostKeyView: View {
                 }
                 Spacer()
                 VStack(spacing: 12) {
-                    Button(role: changed ? .destructive : nil) { dismiss() } label: {
+                    Button(role: changed ? .destructive : nil) { model.trustHostKey(prompt) } label: {
                         Text(changed ? "Trust new key" : "Trust").frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
@@ -58,5 +59,5 @@ struct HostKeyView: View {
     }
 }
 
-#Preview("First") { HostKeyView(prompt: MockScenario.hostKey.makeModel().hostKeyPrompt!) }
-#Preview("Changed") { HostKeyView(prompt: MockScenario.hostKeyChanged.makeModel().hostKeyPrompt!) }
+#Preview("First") { HostKeyView(prompt: MockScenario.hostKey.makeModel().hostKeyPrompt!).environment(MockScenario.hostKey.makeModel()) }
+#Preview("Changed") { HostKeyView(prompt: MockScenario.hostKeyChanged.makeModel().hostKeyPrompt!).environment(MockScenario.hostKeyChanged.makeModel()) }

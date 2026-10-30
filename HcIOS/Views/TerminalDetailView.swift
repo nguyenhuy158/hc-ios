@@ -4,6 +4,8 @@ struct TerminalDetailView: View {
     @Environment(AppModel.self) private var model
     let terminal: TerminalInfo
     @State private var draft = ""
+    @State private var screen: String?
+    @State private var readError: String?
     @State private var confirmInterrupt = false
     @FocusState private var inputFocused: Bool
 
@@ -11,7 +13,7 @@ struct TerminalDetailView: View {
         ScrollViewReader { proxy in
             ScrollView([.vertical, .horizontal]) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(terminal.screen)
+                    Text(screen ?? terminal.screen)
                         .font(.system(.caption, design: .monospaced))
                         .textSelection(.enabled)
                         .fixedSize(horizontal: true, vertical: false)
@@ -24,6 +26,27 @@ struct TerminalDetailView: View {
             .onAppear { proxy.scrollTo("bottom", anchor: .bottomLeading) }
         }
         .background(Color(.secondarySystemBackground))
+        .overlay(alignment: .top) {
+            if let readError {
+                Text(readError)
+                    .font(.footnote)
+                    .padding(8)
+                    .frame(maxWidth: .infinity)
+                    .background(.red.opacity(0.15))
+            }
+        }
+        .task(id: terminal.id) {
+            guard !model.isMock else { return }
+            while !Task.isCancelled {
+                do {
+                    screen = try await model.client.read(terminal.id)
+                    readError = nil
+                } catch {
+                    readError = error.localizedDescription
+                }
+                try? await Task.sleep(for: .seconds(1.5))
+            }
+        }
         .navigationTitle(terminal.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -69,7 +92,14 @@ struct TerminalDetailView: View {
                 Button {
                     let text = draft
                     draft = ""
-                    Task { try? await model.client.send(terminal.id, text: text) }
+                    Task {
+                        do {
+                            try await model.client.send(terminal.id, text: text)
+                        } catch {
+                            readError = error.localizedDescription
+                            draft = text
+                        }
+                    }
                 } label: {
                     Image(systemName: "arrow.up.circle.fill").font(.system(size: 32))
                 }
@@ -84,7 +114,13 @@ struct TerminalDetailView: View {
     }
 
     private func press(_ keys: [String]) {
-        Task { try? await model.client.keys(terminal.id, keys) }
+        Task {
+            do {
+                try await model.client.keys(terminal.id, keys)
+            } catch {
+                readError = error.localizedDescription
+            }
+        }
     }
 }
 
