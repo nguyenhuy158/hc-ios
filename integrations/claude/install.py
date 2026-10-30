@@ -25,7 +25,7 @@ if os.path.exists(settings_path) and not os.path.exists(backup):
     shutil.copy(settings_path, backup)
 hooks = settings.setdefault("hooks", {})
 
-for event in sorted({event for event, _, _ in HOOKS}):
+for event in sorted(set(hooks) | {event for event, _, _ in HOOKS}):
     entries = [e for e in hooks.get(event, []) if not any("hc-status.sh" in h.get("command", "") for h in e.get("hooks", []))]
     if not uninstall:
         for hook_event, matcher, state in HOOKS:
