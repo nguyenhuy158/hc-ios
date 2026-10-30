@@ -19,7 +19,9 @@ hook_path = os.path.join(home, "hooks", "hc-status.sh")
 uninstall = "--uninstall" in sys.argv
 
 settings = json.load(open(settings_path)) if os.path.exists(settings_path) else {}
-shutil.copy(settings_path, settings_path + ".bak-hc-status") if os.path.exists(settings_path) else None
+backup = settings_path + ".bak-hc-status"
+if os.path.exists(settings_path) and not os.path.exists(backup):
+    shutil.copy(settings_path, backup)
 hooks = settings.setdefault("hooks", {})
 
 for event, state in STATES.items():
@@ -47,4 +49,4 @@ else:
     os.makedirs(os.path.dirname(hook_path), exist_ok=True)
     shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "hc-status.sh"), hook_path)
     os.chmod(hook_path, 0o755)
-    print(f"hc status hook installed; backup at {settings_path}.bak-hc-status")
+    print(f"hc status hook installed; backup at {backup}")
