@@ -1,6 +1,13 @@
 .DS_Store
 build/
-HcIOS.xcodeproj/
+HcIOS.xcodeproj/*
+!HcIOS.xcodeproj/project.xcworkspace/
+HcIOS.xcodeproj/project.xcworkspace/*
+!HcIOS.xcodeproj/project.xcworkspace/xcshareddata/
+HcIOS.xcodeproj/project.xcworkspace/xcshareddata/*
+!HcIOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+HcIOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/*
+!HcIOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 xcuserdata/
 *.xcuserstate
 .swiftpm/

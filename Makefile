@@ -10,11 +10,11 @@ project:
 
 build: project
 	xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -configuration Debug \
-		-destination 'platform=iOS Simulator,name=$(SIM)' -derivedDataPath $(DERIVED) build
+		-destination 'platform=iOS Simulator,name=$(SIM)' -derivedDataPath $(DERIVED) -onlyUsePackageVersionsFromResolvedFile build
 
 test: project
 	xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -configuration Debug \
-		-destination 'platform=iOS Simulator,name=$(SIM)' -derivedDataPath $(DERIVED) -only-testing:HcIOSTests test
+		-destination 'platform=iOS Simulator,name=$(SIM)' -derivedDataPath $(DERIVED) -onlyUsePackageVersionsFromResolvedFile -only-testing:HcIOSTests test
 
 e2e:
 	sh scripts/e2e.sh

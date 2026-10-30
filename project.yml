@@ -9,7 +9,7 @@ options:
 packages:
   Citadel:
     url: https://github.com/orlandos-nl/Citadel
-    from: 0.12.1
+    exactVersion: 0.12.1
 targets:
   HcIOS:
     type: application

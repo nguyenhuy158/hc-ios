@@ -28,7 +28,7 @@ hc run --bg --name e2e-blocked python3 "$PWD/scripts/fake-agent.py" blocked >/de
 hc run --bg --name e2e-working python3 "$PWD/scripts/fake-agent.py" working >/dev/null
 
 xcodegen generate
-xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -destination "$DEST" -derivedDataPath build build-for-testing -quiet
+xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -destination "$DEST" -derivedDataPath build -onlyUsePackageVersionsFromResolvedFile build-for-testing -quiet
 
 xcrun simctl boot "$SIM" 2>/dev/null || true
 xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/HcIOS.app
