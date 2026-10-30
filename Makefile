@@ -3,7 +3,7 @@ BUNDLE := dev.nguyenhuy158.hcios
 DERIVED := build
 APP := $(DERIVED)/Build/Products/Debug-iphonesimulator/HcIOS.app
 
-.PHONY: project build sim shot clean
+.PHONY: project build sim shot shots clean
 
 project:
 	xcodegen generate
@@ -20,6 +20,9 @@ sim: build
 
 shot:
 	xcrun simctl io booted screenshot $(OUT)
+
+shots: sim
+	sh scripts/shots.sh $(OUT)
 
 clean:
 	rm -rf $(DERIVED) HcIOS.xcodeproj
