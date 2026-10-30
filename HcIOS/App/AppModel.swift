@@ -46,7 +46,7 @@ final class AppModel {
 
     static func live() -> AppModel {
         let model = AppModel(client: MockHcClient(terminals: []), isMock: false)
-        model.locked = true
+        model.locked = !skipLock
         model.showSettings = model.host.isEmpty || model.user.isEmpty
         return model
     }
@@ -62,8 +62,16 @@ final class AppModel {
 
     var blockedCount: Int { terminals.filter { $0.status == .blocked }.count }
 
+    private static var skipLock: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-uiTestingNoLock")
+        #else
+        false
+        #endif
+    }
+
     func lock() {
-        guard !isMock else { return }
+        guard !isMock, !Self.skipLock else { return }
         locked = true
     }
 
@@ -83,7 +91,9 @@ final class AppModel {
     }
 
     func start() async {
-        guard !isMock, !host.isEmpty, !user.isEmpty else { return }
+        guard !isMock else { return }
+        _ = KeyStore.publicKeyLine()
+        guard !host.isEmpty, !user.isEmpty else { return }
         await connect()
     }
 

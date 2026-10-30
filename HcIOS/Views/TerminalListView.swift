@@ -44,6 +44,8 @@ struct TerminalListView: View {
                     Section {
                         ForEach(section.items) { t in
                             NavigationLink(value: t) { TerminalRow(terminal: t) }
+                                .accessibilityIdentifier("row-\(t.name)")
+                                .accessibilityValue(t.status.title)
                         }
                     } header: {
                         Label("\(section.status.title) · \(section.items.count)", systemImage: section.status.symbol)

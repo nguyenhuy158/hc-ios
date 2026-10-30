@@ -10,7 +10,7 @@ struct HcIOSApp: App {
             RootView()
                 .environment(model)
                 .overlay {
-                    if scenePhase != .active && !model.isMock {
+                    if scenePhase != .active && !model.isMock && !model.locked {
                         Color(.systemBackground)
                             .overlay(Image(systemName: "terminal.fill").font(.system(size: 56)).foregroundStyle(.secondary))
                             .ignoresSafeArea()
