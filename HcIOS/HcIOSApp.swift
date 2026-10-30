@@ -9,6 +9,13 @@ struct HcIOSApp: App {
         WindowGroup {
             RootView()
                 .environment(model)
+                .overlay {
+                    if scenePhase != .active && !model.isMock {
+                        Color(.systemBackground)
+                            .overlay(Image(systemName: "terminal.fill").font(.system(size: 56)).foregroundStyle(.secondary))
+                            .ignoresSafeArea()
+                    }
+                }
                 .task { await model.start() }
                 .onChange(of: scenePhase) { _, phase in
                     switch phase {
