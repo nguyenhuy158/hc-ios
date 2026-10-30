@@ -11,7 +11,11 @@ struct HcIOSApp: App {
                 .environment(model)
                 .task { await model.start() }
                 .onChange(of: scenePhase) { _, phase in
-                    if phase == .active { Task { await model.reconnectIfNeeded() } }
+                    switch phase {
+                    case .active: Task { await model.reconnectIfNeeded() }
+                    case .background: model.lock()
+                    default: break
+                    }
                 }
         }
     }

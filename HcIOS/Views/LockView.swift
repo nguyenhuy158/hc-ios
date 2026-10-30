@@ -12,7 +12,7 @@ struct LockView: View {
             Text("hc is locked")
                 .font(.title3.weight(.semibold))
             Spacer()
-            Button { model.locked = false } label: {
+            Button { Task { await model.unlock() } } label: {
                 Label("Unlock with Face ID", systemImage: "faceid").frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -22,6 +22,7 @@ struct LockView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
+        .task { if !model.isMock { await model.unlock() } }
     }
 }
 

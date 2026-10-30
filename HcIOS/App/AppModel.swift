@@ -1,3 +1,4 @@
+import LocalAuthentication
 import SwiftUI
 
 enum ConnectionState: Equatable {
@@ -45,6 +46,7 @@ final class AppModel {
 
     static func live() -> AppModel {
         let model = AppModel(client: MockHcClient(terminals: []), isMock: false)
+        model.locked = true
         model.showSettings = model.host.isEmpty || model.user.isEmpty
         return model
     }
@@ -59,6 +61,26 @@ final class AppModel {
     var trustedFingerprint: String? { HostKeyTrust.trusted(config.hostKeyID).map(HostKeyTrust.fingerprint) }
 
     var blockedCount: Int { terminals.filter { $0.status == .blocked }.count }
+
+    func lock() {
+        guard !isMock else { return }
+        locked = true
+    }
+
+    func unlock() async {
+        if isMock {
+            locked = false
+            return
+        }
+        let context = LAContext()
+        var error: NSError?
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+            locked = false
+            return
+        }
+        let ok = (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Unlock hc to see your terminals.")) ?? false
+        if ok { locked = false }
+    }
 
     func start() async {
         guard !isMock, !host.isEmpty, !user.isEmpty else { return }
