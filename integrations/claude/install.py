@@ -5,13 +5,14 @@ import os
 import shutil
 import sys
 
-STATES = {
-    "UserPromptSubmit": "working",
-    "PreToolUse": "working",
-    "PermissionRequest": "blocked",
-    "Stop": "done",
-    "SessionStart": "idle",
-}
+HOOKS = [
+    ("SessionStart", None, "idle"),
+    ("UserPromptSubmit", None, "working"),
+    ("PreToolUse", "*", "working"),
+    ("PostToolUse", "*", "working"),
+    ("PermissionRequest", "*", "blocked"),
+    ("Stop", None, "done"),
+]
 
 home = os.environ.get("CLAUDE_CONFIG_DIR") or os.path.expanduser("~/.claude")
 settings_path = os.path.join(home, "settings.json")
@@ -24,14 +25,16 @@ if os.path.exists(settings_path) and not os.path.exists(backup):
     shutil.copy(settings_path, backup)
 hooks = settings.setdefault("hooks", {})
 
-for event, state in STATES.items():
-    command = f"$HOME/.claude/hooks/hc-status.sh {state}"
-    entries = [e for e in hooks.get(event, []) if not any(h.get("command") == command for h in e.get("hooks", []))]
+for event in sorted({event for event, _, _ in HOOKS}):
+    entries = [e for e in hooks.get(event, []) if not any("hc-status.sh" in h.get("command", "") for h in e.get("hooks", []))]
     if not uninstall:
-        entry = {"hooks": [{"type": "command", "command": command, "timeout": 3}]}
-        if event in ("PreToolUse", "PermissionRequest"):
-            entry["matcher"] = "*"
-        entries.append(entry)
+        for hook_event, matcher, state in HOOKS:
+            if hook_event != event:
+                continue
+            entry = {"hooks": [{"type": "command", "command": f"$HOME/.claude/hooks/hc-status.sh {state}", "timeout": 3}]}
+            if matcher:
+                entry["matcher"] = matcher
+            entries.append(entry)
     if entries:
         hooks[event] = entries
     else:
