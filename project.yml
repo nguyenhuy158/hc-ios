@@ -27,7 +27,10 @@ targets:
           - CFBundleURLName: dev.nguyenhuy158.hcios
             CFBundleURLSchemes: [hcios]
         NSAppTransportSecurity:
-          NSAllowsLocalNetworking: true
+          NSExceptionDomains:
+            ts.net:
+              NSIncludesSubdomains: true
+              NSExceptionAllowsInsecureHTTPLoads: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.nguyenhuy158.hcios

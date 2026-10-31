@@ -23,6 +23,7 @@ final class AppModel {
     var locked = false
     var showSettings = false
     var hostKeyPrompt: HostKeyPrompt?
+    var pairPrompt: PairRequest?
     var path: [TerminalInfo] = []
     let isMock: Bool
 
@@ -129,6 +130,7 @@ final class AppModel {
     }
 
     func pair(_ request: PairRequest, send: ((PairRequest) async throws -> Void)? = nil) async {
+        pairPrompt = nil
         connection = .connecting
         do {
             if let send {
@@ -152,7 +154,9 @@ final class AppModel {
 
     func open(_ url: URL) {
         if let request = PairRequest(url: url) {
-            Task { await pair(request) }
+            showSettings = false
+            hostKeyPrompt = nil
+            pairPrompt = request
             return
         }
         guard url.scheme == "hcios", url.host == "terminal" else { return }

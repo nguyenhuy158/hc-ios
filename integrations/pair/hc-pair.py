@@ -102,7 +102,7 @@ def main():
         done.set()
 
     server = serve(ip, token, on_key)
-    url = pair_url(dns, getpass.getuser(), host_key(), f"http://{ip}:{server.server_port}", token)
+    url = pair_url(dns, getpass.getuser(), host_key(), f"http://{dns}:{server.server_port}", token)
     if shutil.which("qrencode"):
         subprocess.run(["qrencode", "-t", "ansiutf8", url], check=True)
     else:

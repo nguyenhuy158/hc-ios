@@ -43,6 +43,7 @@ struct RootView: View {
             }
             .sheet(isPresented: $model.showSettings) { SettingsView() }
             .sheet(item: $model.hostKeyPrompt) { HostKeyView(prompt: $0) }
+            .sheet(item: $model.pairPrompt) { PairView(request: $0) }
         }
     }
 }

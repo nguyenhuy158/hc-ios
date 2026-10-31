@@ -9,6 +9,10 @@ struct ConnectionConfig: Equatable {
     var hcPath: String
 
     var hostKeyID: String { port == 22 ? host : "\(host):\(port)" }
+
+    static func isSafeHcPath(_ path: String) -> Bool {
+        !path.isEmpty && path.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || "_./~-".contains($0)) }
+    }
 }
 
 final class SSHHcClient: HcClient {
@@ -103,6 +107,10 @@ final class SSHHcClient: HcClient {
     }
 
     private func open(_ link: RPCLink, on client: SSHClient, onClose: @escaping @Sendable () -> Void = {}) {
+        guard ConnectionConfig.isSafeHcPath(config.hcPath) else {
+            Task { await link.close(HcError(kind: "config", message: "The hc path may only contain letters, digits and _ . / ~ -")) }
+            return
+        }
         let command = "exec \(config.hcPath) connect"
         Task {
             do {

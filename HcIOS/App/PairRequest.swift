@@ -1,6 +1,7 @@
 import Foundation
 
-struct PairRequest: Equatable {
+struct PairRequest: Equatable, Identifiable {
+    var id: String { token }
     let host: String
     let port: String
     let user: String
@@ -21,9 +22,18 @@ struct PairRequest: Equatable {
         self.port = q["port"].flatMap { $0.isEmpty ? nil : $0 } ?? "22"
         self.user = user
         self.hcPath = q["hc"].flatMap { $0.isEmpty ? nil : $0 } ?? "~/.local/bin/herdr-core"
+        guard ConnectionConfig.isSafeHcPath(hcPath), Int(port) != nil else { return nil }
         self.hostKey = hostKey
         self.endpoint = endpoint
         self.token = token
+    }
+
+    var hostKeyID: String { port == "22" ? host : "\(host):\(port)" }
+
+    var fingerprint: String { HostKeyTrust.fingerprint(hostKey) }
+
+    var previousFingerprint: String? {
+        HostKeyTrust.trusted(hostKeyID).flatMap { $0 == hostKey ? nil : HostKeyTrust.fingerprint($0) }
     }
 
     func send(publicKey: String) async throws {

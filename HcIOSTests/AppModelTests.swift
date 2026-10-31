@@ -44,6 +44,38 @@ final class AppModelTests: XCTestCase {
         XCTAssertNil(PairRequest(url: URL(string: "hcios://terminal/t1")!))
     }
 
+    func testPairLinkOnlyAsksForConfirmation() {
+        let model = AppModel()
+        let before = model.host
+        model.showSettings = true
+        model.open(pairURL)
+        XCTAssertEqual(model.pairPrompt?.token, "tok")
+        XCTAssertFalse(model.showSettings)
+        XCTAssertEqual(model.host, before)
+        XCTAssertNil(HostKeyTrust.trusted("mac.ts.net"))
+    }
+
+    func testPairLinkRejectsUnsafeHcPath() {
+        for hc in ["rm%20-rf%20~", "x;id", "$(id)", "a%60b%60", "a|b", ""] {
+            let url = URL(string: pairURL.absoluteString.replacingOccurrences(of: "hc=~/.local/bin/herdr-core", with: "hc=\(hc)"))!
+            if hc.isEmpty {
+                XCTAssertEqual(PairRequest(url: url)?.hcPath, "~/.local/bin/herdr-core")
+            } else {
+                XCTAssertNil(PairRequest(url: url), hc)
+            }
+        }
+        XCTAssertTrue(ConnectionConfig.isSafeHcPath("~/.local/bin/herdr-core"))
+        XCTAssertFalse(ConnectionConfig.isSafeHcPath("hc connect; id"))
+    }
+
+    func testPairShowsChangedHostKey() {
+        HostKeyTrust.trust("mac.ts.net", keyLine: "ssh-ed25519 AAAAOTHER")
+        defer { HostKeyTrust.forget("mac.ts.net") }
+        XCTAssertNotNil(PairRequest(url: pairURL)?.previousFingerprint)
+        HostKeyTrust.trust("mac.ts.net", keyLine: "ssh-ed25519 AAAA+/")
+        XCTAssertNil(PairRequest(url: pairURL)?.previousFingerprint)
+    }
+
     func testPairFillsSettingsAndTrustsHostKey() async {
         let model = AppModel()
         model.showSettings = true
