@@ -42,7 +42,7 @@ xcrun devicectl device install app --device <device id> build/Build/Products/Deb
 1. On the Mac run `make pair` (or `integrations/pair/hc-pair.py`). It prints a QR code.
 2. Scan it with the iPhone Camera and open it in hc.
 
-The app fills in host, user and hc path, pins the Mac's host key from the QR, sends its public key to the Mac (added to `~/.ssh/authorized_keys`) and connects. The pairing listener runs only on the Mac's Tailscale address, needs the one-time token from the QR and stops after one pairing or 5 minutes.
+The app asks for confirmation, then fills in the Mac's Tailscale IP, user and hc path, pins the host key from the QR, sends its public key to the Mac (added to `~/.ssh/authorized_keys`) and connects. The pairing listener is a plain TCP socket on the Mac's Tailscale IP, needs the one-time token from the QR and stops after one pairing or 5 minutes. The IP is used instead of the MagicDNS name so pairing works without Tailscale DNS; run `make pair` again if the Mac's Tailscale IP changes.
 
 Manual setup still works: fill in **Settings**, add the copied public key to `~/.ssh/authorized_keys`, tap **Done** and **Trust** the fingerprint shown by `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`.
 

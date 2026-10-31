@@ -31,17 +31,18 @@ final class AppModelTests: XCTestCase {
         XCTAssertTrue(model.path.isEmpty)
     }
 
-    private let pairURL = URL(string: "hcios://pair?host=mac.ts.net&port=22&user=huy&hc=~/.local/bin/herdr-core&hostkey=ssh-ed25519%20AAAA%2B%2F&url=http://100.1.2.3:5000&token=tok")!
+    private let pairURL = URL(string: "hcios://pair?host=mac.ts.net&port=22&user=huy&hc=~/.local/bin/herdr-core&hostkey=ssh-ed25519%20AAAA%2B%2F&url=tcp://100.1.2.3:5000&token=tok")!
 
     func testPairRequestParsesQRLink() {
         let request = PairRequest(url: pairURL)
         XCTAssertEqual(request?.host, "mac.ts.net")
         XCTAssertEqual(request?.user, "huy")
         XCTAssertEqual(request?.hostKey, "ssh-ed25519 AAAA+/")
-        XCTAssertEqual(request?.endpoint.absoluteString, "http://100.1.2.3:5000")
+        XCTAssertEqual(request?.endpoint.absoluteString, "tcp://100.1.2.3:5000")
         XCTAssertEqual(request?.token, "tok")
         XCTAssertNil(PairRequest(url: URL(string: "hcios://pair?host=mac&user=huy&hostkey=ssh-rsa%20AAAA&url=http://x&token=t")!))
         XCTAssertNil(PairRequest(url: URL(string: "hcios://terminal/t1")!))
+        XCTAssertNil(PairRequest(url: URL(string: pairURL.absoluteString.replacingOccurrences(of: "tcp://", with: "http://"))!))
     }
 
     func testPairLinkOnlyAsksForConfirmation() {

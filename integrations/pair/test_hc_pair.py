@@ -2,10 +2,9 @@ import importlib.util
 import json
 import os
 import pathlib
+import socket
 import tempfile
-import urllib.error
 import urllib.parse
-import urllib.request
 
 spec = importlib.util.spec_from_file_location("hc_pair", pathlib.Path(__file__).with_name("hc-pair.py"))
 hc_pair = importlib.util.module_from_spec(spec)
@@ -23,11 +22,11 @@ def test_valid_key():
 
 
 def test_pair_url():
-    url = hc_pair.pair_url("mac.ts.net", "huy", "ssh-ed25519 AAAA+/=", "http://100.1.2.3:5000", "tok")
+    url = hc_pair.pair_url("mac.ts.net", "huy", "ssh-ed25519 AAAA+/=", "tcp://100.1.2.3:5000", "tok")
     parsed = urllib.parse.urlparse(url)
     query = dict(urllib.parse.parse_qsl(parsed.query))
     assert (parsed.scheme, parsed.netloc) == ("hcios", "pair")
-    assert query["hostkey"] == "ssh-ed25519 AAAA+/=" and query["url"] == "http://100.1.2.3:5000"
+    assert query["hostkey"] == "ssh-ed25519 AAAA+/=" and query["url"] == "tcp://100.1.2.3:5000"
     assert "+" not in parsed.query
 
 
@@ -43,26 +42,27 @@ def test_add_key():
         assert oct(os.stat(path).st_mode & 0o777) == "0o600"
 
 
-def post(port, body):
-    request = urllib.request.Request(f"http://127.0.0.1:{port}/pair", data=json.dumps(body).encode(), method="POST")
-    try:
-        return urllib.request.urlopen(request, timeout=5).status
-    except urllib.error.HTTPError as error:
-        return error.code
+def send(port, raw):
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as s:
+        s.sendall(raw)
+        return json.loads(s.makefile().readline())["message"]
 
 
 def test_serve():
     got = []
     server = hc_pair.serve("127.0.0.1", "secret", got.append)
     try:
-        port = server.server_port
-        assert post(port, {"token": "nope", "key": KEY}) == 403
-        assert post(port, {"token": "secret", "key": "ssh-rsa AAAA"}) == 400
+        port = server.server_address[1]
+        assert send(port, b"garbage\n") == "bad token"
+        assert send(port, b"[1]\n") == "bad token"
+        assert send(port, json.dumps({"token": "nope", "key": KEY}).encode() + b"\n") == "bad token"
+        assert send(port, json.dumps({"token": "secret", "key": "ssh-rsa AAAA"}).encode() + b"\n") == "bad key"
         assert got == []
-        assert post(port, {"token": "secret", "key": KEY}) == 200
+        assert send(port, json.dumps({"token": "secret", "key": KEY}).encode() + b"\n") == "paired"
         assert got == [KEY]
     finally:
         server.shutdown()
+        server.server_close()
 
 
 if __name__ == "__main__":
