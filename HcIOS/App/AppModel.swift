@@ -31,6 +31,7 @@ final class AppModel {
     var port: String { didSet { save() } }
     var user: String { didSet { save() } }
     var hcPath: String { didSet { save() } }
+    private(set) var requireFaceID: Bool
 
     @ObservationIgnored var makeClient: (ConnectionConfig) -> HcClient = { SSHHcClient(config: $0) }
     @ObservationIgnored private var attempt = 0
@@ -46,11 +47,12 @@ final class AppModel {
         port = isMock ? "22" : d.string(forKey: "port") ?? "22"
         user = isMock ? "huyntq" : d.string(forKey: "user") ?? ""
         hcPath = isMock ? "~/.local/bin/herdr-core" : d.string(forKey: "hcPath") ?? "~/.local/bin/herdr-core"
+        requireFaceID = isMock ? true : d.object(forKey: "requireFaceID") as? Bool ?? true
     }
 
     static func live() -> AppModel {
         let model = AppModel(client: MockHcClient(terminals: []), isMock: false)
-        model.locked = !skipLock
+        model.locked = model.shouldLock
         model.showSettings = model.host.isEmpty || model.user.isEmpty
         return model
     }
@@ -74,8 +76,10 @@ final class AppModel {
         #endif
     }
 
+    private var shouldLock: Bool { !isMock && !Self.skipLock && requireFaceID }
+
     func lock() {
-        guard !isMock, !Self.skipLock else { return }
+        guard shouldLock else { return }
         locked = true
     }
 
@@ -84,14 +88,29 @@ final class AppModel {
             locked = false
             return
         }
+        if await Self.authenticate("Unlock hc to see your terminals.") { locked = false }
+    }
+
+    func setRequireFaceID(_ on: Bool, authenticate: (() async -> Bool)? = nil) async {
+        guard on != requireFaceID else { return }
+        if !on {
+            let ok: Bool
+            if let authenticate {
+                ok = await authenticate()
+            } else {
+                ok = await Self.authenticate("Turn off Face ID for hc.")
+            }
+            guard ok else { return }
+        }
+        requireFaceID = on
+        if !isMock { UserDefaults.standard.set(on, forKey: "requireFaceID") }
+    }
+
+    private static func authenticate(_ reason: String) async -> Bool {
         let context = LAContext()
         var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            locked = false
-            return
-        }
-        let ok = (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: "Unlock hc to see your terminals.")) ?? false
-        if ok { locked = false }
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else { return true }
+        return (try? await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)) ?? false
     }
 
     func start() async {

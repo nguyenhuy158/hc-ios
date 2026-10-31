@@ -108,6 +108,29 @@ final class AppModelTests: XCTestCase {
         XCTAssertTrue(slow.disconnected)
     }
 
+    func testTurningOffFaceIDNeedsAuthAndStopsLocking() async {
+        defer { UserDefaults.standard.removeObject(forKey: "requireFaceID") }
+        let model = AppModel(client: MockHcClient(), isMock: false)
+        XCTAssertTrue(model.requireFaceID)
+        model.lock()
+        XCTAssertTrue(model.locked)
+        model.locked = false
+
+        await model.setRequireFaceID(false) { false }
+        XCTAssertTrue(model.requireFaceID)
+
+        await model.setRequireFaceID(false) { true }
+        XCTAssertFalse(model.requireFaceID)
+        model.lock()
+        XCTAssertFalse(model.locked)
+        XCTAssertFalse(AppModel(client: MockHcClient(), isMock: false).requireFaceID)
+
+        await model.setRequireFaceID(true) { XCTFail("turning on must not ask"); return false }
+        XCTAssertTrue(model.requireFaceID)
+        model.lock()
+        XCTAssertTrue(model.locked)
+    }
+
     func testPairFailureKeepsSettings() async {
         let model = AppModel()
         let before = model.host

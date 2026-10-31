@@ -86,6 +86,10 @@ struct SettingsView: View {
                 }
 
                 Section("Security") {
+                    Toggle("Require Face ID", isOn: Binding(
+                        get: { model.requireFaceID },
+                        set: { on in Task { await model.setRequireFaceID(on) } }
+                    ))
                     LabeledContent("Host key", value: model.trustedFingerprint ?? "Not trusted yet")
                         .font(.subheadline)
                         .lineLimit(1)
