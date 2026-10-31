@@ -3,7 +3,7 @@ BUNDLE := dev.nguyenhuy158.hcios
 DERIVED := build
 APP := $(DERIVED)/Build/Products/Debug-iphonesimulator/HcIOS.app
 
-.PHONY: project build test e2e sim shot shots pair clean
+.PHONY: project build test e2e sim shot shots ipa pair clean
 
 project:
 	xcodegen generate
@@ -30,6 +30,15 @@ shot:
 
 shots: sim
 	sh scripts/shots.sh $(OUT)
+
+ipa: project
+	xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -configuration Release \
+		-destination 'generic/platform=iOS' -derivedDataPath $(DERIVED) -onlyUsePackageVersionsFromResolvedFile \
+		CODE_SIGNING_ALLOWED=NO build
+	rm -rf $(DERIVED)/ipa && mkdir -p $(DERIVED)/ipa/Payload
+	cp -R $(DERIVED)/Build/Products/Release-iphoneos/HcIOS.app $(DERIVED)/ipa/Payload/
+	cd $(DERIVED)/ipa && zip -qry ../HcIOS.ipa Payload
+	@echo $(DERIVED)/HcIOS.ipa
 
 pair:
 	python3 integrations/pair/hc-pair.py

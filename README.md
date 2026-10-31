@@ -35,6 +35,8 @@ xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -destination 'id=<device id>' 
 xcrun devicectl device install app --device <device id> build/Build/Products/Debug-iphoneos/HcIOS.app
 ```
 
+To avoid reinstalling from Xcode every 7 days, install [SideStore](https://sidestore.io) (nightly on iOS 26.4+) with [iloader](https://iloader.app), then build an unsigned IPA with `make ipa` and open `build/HcIOS.ipa` in SideStore; it re-signs hc on the phone.
+
 `xcrun devicectl list devices` shows the device id. The first time, trust the developer on the phone: **Settings → General → VPN & Device Management**.
 
 ## First run
