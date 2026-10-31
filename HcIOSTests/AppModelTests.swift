@@ -90,6 +90,24 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(model.connection, .connected)
     }
 
+    func testStaleConnectFailureKeepsNewerConnection() async {
+        let model = AppModel()
+        let slow = GatedClient()
+        var clients: [HcClient] = [slow, MockHcClient(terminals: MockData.terminals)]
+        model.makeClient = { _ in clients.removeFirst() }
+
+        let first = Task { await model.connect() }
+        await slow.started()
+        await model.connect()
+        XCTAssertEqual(model.connection, .connected)
+
+        slow.fail(HcError(kind: "timeout", message: "old host timed out"))
+        await first.value
+        XCTAssertEqual(model.connection, .connected)
+        XCTAssertEqual(model.terminals.count, MockData.terminals.count)
+        XCTAssertTrue(slow.disconnected)
+    }
+
     func testPairFailureKeepsSettings() async {
         let model = AppModel()
         let before = model.host
@@ -98,4 +116,36 @@ final class AppModelTests: XCTestCase {
         XCTAssertEqual(model.connection, .disconnected("bad token"))
         XCTAssertNil(HostKeyTrust.trusted("mac.ts.net"))
     }
+}
+
+private final class GatedClient: HcClient, @unchecked Sendable {
+    private var pending: CheckedContinuation<Void, Error>?
+    private var waiter: CheckedContinuation<Void, Never>?
+    private(set) var disconnected = false
+
+    func connect() async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            pending = continuation
+            waiter?.resume()
+            waiter = nil
+        }
+    }
+
+    func started() async {
+        if pending != nil { return }
+        await withCheckedContinuation { waiter = $0 }
+    }
+
+    func fail(_ error: Error) {
+        pending?.resume(throwing: error)
+        pending = nil
+    }
+
+    func disconnect() async { disconnected = true }
+    func events() -> AsyncStream<Void> { AsyncStream { _ in } }
+    func list() async throws -> [TerminalInfo] { [] }
+    func read(_ id: String) async throws -> String { "" }
+    func send(_ id: String, text: String) async throws {}
+    func keys(_ id: String, _ keys: [String]) async throws {}
+    func test() async throws -> String { "" }
 }

@@ -53,12 +53,7 @@ struct PairRequest: Equatable, Identifiable {
         defer { connection.cancel() }
         let queue = DispatchQueue(label: "hc.pair")
         return try await withCheckedThrowingContinuation { continuation in
-            var finished = false
-            func finish(_ result: Result<Data, Error>) {
-                guard !finished else { return }
-                finished = true
-                continuation.resume(with: result)
-            }
+            let finish = ResumeOnce(continuation)
             connection.stateUpdateHandler = { state in
                 switch state {
                 case .ready:
@@ -83,5 +78,18 @@ struct PairRequest: Equatable, Identifiable {
             }
             connection.start(queue: queue)
         }
+    }
+}
+
+private final class ResumeOnce: @unchecked Sendable {
+    private var continuation: CheckedContinuation<Data, Error>?
+
+    init(_ continuation: CheckedContinuation<Data, Error>) {
+        self.continuation = continuation
+    }
+
+    func callAsFunction(_ result: Result<Data, Error>) {
+        continuation?.resume(with: result)
+        continuation = nil
     }
 }

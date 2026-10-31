@@ -32,6 +32,8 @@ final class AppModel {
     var user: String { didSet { save() } }
     var hcPath: String { didSet { save() } }
 
+    @ObservationIgnored var makeClient: (ConnectionConfig) -> HcClient = { SSHHcClient(config: $0) }
+    @ObservationIgnored private var attempt = 0
     @ObservationIgnored private var pendingOpen: String?
     @ObservationIgnored private var eventsTask: Task<Void, Never>?
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
@@ -100,21 +102,29 @@ final class AppModel {
     }
 
     func connect() async {
+        attempt += 1
+        let current = attempt
         eventsTask?.cancel()
         await client.disconnect()
-        let live = SSHHcClient(config: config)
+        let live = makeClient(config)
         client = live
         connection = .connecting
         do {
             try await live.connect()
+            guard current == attempt else {
+                await live.disconnect()
+                return
+            }
             connection = .connected
             await refresh()
             listenForEvents()
         } catch let error as HostKeyError {
+            guard current == attempt else { return }
             hostKeyPrompt = HostKeyPrompt(host: error.host, fingerprint: error.fingerprint,
                                           previous: error.previousFingerprint, keyLine: error.keyLine)
             connection = .disconnected("Confirm the Mac's host key to connect.")
         } catch {
+            guard current == attempt else { return }
             connection = .disconnected(error.localizedDescription)
         }
     }
