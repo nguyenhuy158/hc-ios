@@ -26,6 +26,8 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: dev.nguyenhuy158.hcios
             CFBundleURLSchemes: [hcios]
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.nguyenhuy158.hcios

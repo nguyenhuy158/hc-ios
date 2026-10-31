@@ -12,11 +12,11 @@ The phone runs `hc connect` over SSH and speaks hc's JSON-RPC directly: no relay
 - A Mac with Xcode 15.4+, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
 - herdr-core on the Mac (`~/.local/bin/herdr-core`, installed with the [Herdr app](https://github.com/herdrdev/herdr-app))
 - Mac and iPhone on the same [Tailscale](https://tailscale.com) network
+- `qrencode` on the Mac for pairing (`brew install qrencode`)
 
 ## Mac setup
 
-1. Turn on **System Settings → General → Sharing → Remote Login**.
-2. Find the Mac's Tailscale name: `tailscale status --self` (for example `macbook.tailnet.ts.net`).
+Turn on **System Settings → General → Sharing → Remote Login**.
 
 ## Build
 
@@ -39,12 +39,14 @@ xcrun devicectl device install app --device <device id> build/Build/Products/Deb
 
 ## First run
 
-1. Unlock with Face ID.
-2. In **Settings** fill in host (Tailscale name), user and the hc path.
-3. **Copy public key** and add it on the Mac: `echo '<key>' >> ~/.ssh/authorized_keys`.
-4. Tap **Done**. Compare the fingerprint with `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub` and tap **Trust**.
+1. On the Mac run `make pair` (or `integrations/pair/hc-pair.py`). It prints a QR code.
+2. Scan it with the iPhone Camera and open it in hc.
 
-The private key is generated on the phone and stays in its Keychain (this device only). The Mac's host key is pinned on first use; a changed key is refused until you trust it again.
+The app fills in host, user and hc path, pins the Mac's host key from the QR, sends its public key to the Mac (added to `~/.ssh/authorized_keys`) and connects. The pairing listener runs only on the Mac's Tailscale address, needs the one-time token from the QR and stops after one pairing or 5 minutes.
+
+Manual setup still works: fill in **Settings**, add the copied public key to `~/.ssh/authorized_keys`, tap **Done** and **Trust** the fingerprint shown by `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub`.
+
+The private key is generated on the phone and stays in its Keychain (this device only). A changed host key is refused until you trust it again.
 
 ## Agent status
 

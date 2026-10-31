@@ -128,7 +128,33 @@ final class AppModel {
         HostKeyTrust.forget(config.hostKeyID)
     }
 
+    func pair(_ request: PairRequest, send: ((PairRequest) async throws -> Void)? = nil) async {
+        connection = .connecting
+        do {
+            if let send {
+                try await send(request)
+            } else {
+                try await request.send(publicKey: KeyStore.publicKeyLine())
+            }
+        } catch {
+            connection = .disconnected(error.localizedDescription)
+            return
+        }
+        host = request.host
+        port = request.port
+        user = request.user
+        hcPath = request.hcPath
+        HostKeyTrust.trust(config.hostKeyID, keyLine: request.hostKey)
+        showSettings = false
+        hostKeyPrompt = nil
+        if !isMock { await connect() } else { connection = .connected }
+    }
+
     func open(_ url: URL) {
+        if let request = PairRequest(url: url) {
+            Task { await pair(request) }
+            return
+        }
         guard url.scheme == "hcios", url.host == "terminal" else { return }
         let id = String(url.path.dropFirst())
         guard !id.isEmpty else { return }

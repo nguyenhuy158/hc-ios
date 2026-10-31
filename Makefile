@@ -3,7 +3,7 @@ BUNDLE := dev.nguyenhuy158.hcios
 DERIVED := build
 APP := $(DERIVED)/Build/Products/Debug-iphonesimulator/HcIOS.app
 
-.PHONY: project build test e2e sim shot shots clean
+.PHONY: project build test e2e sim shot shots pair clean
 
 project:
 	xcodegen generate
@@ -30,6 +30,9 @@ shot:
 
 shots: sim
 	sh scripts/shots.sh $(OUT)
+
+pair:
+	python3 integrations/pair/hc-pair.py
 
 clean:
 	rm -rf $(DERIVED) HcIOS.xcodeproj
