@@ -34,7 +34,7 @@ shots: sim
 ipa: project
 	xcodebuild -project HcIOS.xcodeproj -scheme HcIOS -configuration Release \
 		-destination 'generic/platform=iOS' -derivedDataPath $(DERIVED) -onlyUsePackageVersionsFromResolvedFile \
-		CODE_SIGNING_ALLOWED=NO build
+		CODE_SIGNING_ALLOWED=NO $(IPA_FLAGS) build
 	rm -rf $(DERIVED)/ipa && mkdir -p $(DERIVED)/ipa/Payload
 	cp -R $(DERIVED)/Build/Products/Release-iphoneos/HcIOS.app $(DERIVED)/ipa/Payload/
 	cd $(DERIVED)/ipa && zip -qry ../HcIOS.ipa Payload

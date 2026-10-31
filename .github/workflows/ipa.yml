@@ -1,0 +1,33 @@
+name: ipa
+
+on:
+  push:
+    branches: [main]
+    paths: [HcIOS/**, project.yml, Makefile, scripts/source.py, .github/workflows/ipa.yml, HcIOS.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ipa
+  cancel-in-progress: true
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install xcodegen
+      - run: make ipa IPA_FLAGS="CURRENT_PROJECT_VERSION=${{ github.run_number }}"
+      - run: |
+          version=$(awk -F'"' '/MARKETING_VERSION: "/{print $2; exit}' project.yml)
+          python3 scripts/source.py build/HcIOS.ipa build/source.json "$version" "${{ github.run_number }}"
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest build/HcIOS.ipa build/source.json \
+            --title "Latest build (${{ github.run_number }})" \
+            --notes "Built from ${{ github.sha }}. Add to SideStore: https://github.com/${{ github.repository }}/releases/download/latest/source.json" \
+            --target ${{ github.sha }}

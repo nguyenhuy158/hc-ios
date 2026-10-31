@@ -37,6 +37,8 @@ xcrun devicectl device install app --device <device id> build/Build/Products/Deb
 
 To avoid reinstalling from Xcode every 7 days, install [SideStore](https://sidestore.io) (nightly on iOS 26.4+) with [iloader](https://iloader.app), then build an unsigned IPA with `make ipa` and open `build/HcIOS.ipa` in SideStore; it re-signs hc on the phone.
 
+Every push to `main` that touches the app builds a new IPA on GitHub Actions and publishes it with a SideStore source. Add it once in SideStore → Sources: `https://github.com/nguyenhuy158/hc-ios/releases/download/latest/source.json`. New builds then show up as updates (tap Update with LocalDevVPN connected).
+
 `xcrun devicectl list devices` shows the device id. The first time, trust the developer on the phone: **Settings → General → VPN & Device Management**.
 
 ## First run
